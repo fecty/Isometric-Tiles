@@ -36,7 +36,20 @@ int main()
 {
     SetTargetFPS(FPS);
     SetTraceLogLevel(LOG_ERROR);
-    InitWindow(w, h, SCREEN_TITLE);
+
+    if (FULLSCREEN) // use full screen
+    {
+        int monitor = GetCurrentMonitor();
+        InitWindow(GetMonitorWidth(monitor), GetMonitorHeight(monitor), SCREEN_TITLE);
+        w = GetScreenWidth();
+        h = GetScreenHeight();
+
+        ToggleFullscreen();
+    }
+    else
+    {
+        InitWindow(w, h, SCREEN_TITLE);
+    }
 
     if (prepareAssets(imgLoc)) // Load Image, perform relevent pre-operations and load it as a texture.
         cout << "Loaded texture successfully" << "\n";
