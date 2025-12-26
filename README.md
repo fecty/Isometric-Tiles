@@ -18,12 +18,16 @@ include/          # Header files (raylib, raymath, rlgl)
 lib/              # Libraries
 raylib/           # raylib source and build files
 src/              # Project source code (main.cpp, definitions.hpp)
+.gitignore        # To specify which files to ignore by git
+LICENSE           # Project's MIT license
+Makefile          # To build the project
+README.md         # File containing details towards the project
 ```
 
 ## Getting Started
 
 1. **Clone the repository** and initialize submodules if needed.
-2. **Build raylib** using the provided build scripts or Makefile in the `raylib/` directory.
+2. **Build raylib** using the provided build scripts or Makefile in the `raylib/` directory. (Note: This step can be skipped for Linux machines, as the project already contains raylib linux binaries)
 3. **Build this project**:
 
    ```sh
@@ -35,7 +39,7 @@ src/              # Project source code (main.cpp, definitions.hpp)
 
 ## Dependencies
 
-- [raylib](https://www.raylib.com/) (included as a subdirectory)
+- [raylib](https://www.raylib.com/)
 - C/C++ compiler (GCC, Clang, MSVC, etc.)
 
 ## License
