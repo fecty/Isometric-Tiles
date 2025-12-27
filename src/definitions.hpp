@@ -15,3 +15,5 @@
 #define GRID_SIZE 15                      // GRID_SIZE * GRID_SIZE is the total number of tiles
 #define MAX_GRID_SIZE 50                  // max grid size allowed
 #define OSCIL_OPTION 3                    // different height functions for an indivdual tile
+#define DIST_STDDEV 2
+#define SHOW_TEXT true

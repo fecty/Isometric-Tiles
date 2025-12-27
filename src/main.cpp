@@ -35,6 +35,7 @@ size_t imgFilesSize = IMG_ARRAY_SIZE;
 Image tileImg;
 Texture tileTexArray[IMG_ARRAY_SIZE];
 Texture tileTex;
+float stddev = DIST_STDDEV;
 
 vector<int> tileMap;
 
@@ -42,6 +43,7 @@ vector<int> tileMap;
 void handleEvents();
 void drawGame();
 void drawTile(Texture &tile, int x, int y, Vector2 startPos, int size, float altitude, bool showOutline = false);
+void drawText(bool showText);
 unsigned int prepareAssets(string files[], size_t limit);
 Vector2 transform(Vector2 v);
 void arrangeRandomTiles();
@@ -75,8 +77,9 @@ int main()
         return -1;
     }
 
-    tileMap.resize(gridSize * gridSize, 3); // initialize vector with a default value
-    arrangeRandomTiles();                   // allocate a normal distribution biased random index to each tile position
+    tileMap.resize(static_cast<long unsigned int>(gridSize * gridSize), 3); // initialize vector with a default value
+
+    arrangeRandomTiles(); // allocate a normal distribution biased random index to each tile position
     while (!WindowShouldClose())
     {
         if (IsWindowFocused())
@@ -98,10 +101,10 @@ void handleEvents()
         amplitude -= .5f;
 
     // Oscillation Speed
-    if (IsKeyDown(KEY_I))
-        oscilSpeed += .1f;
-    if (IsKeyDown(KEY_K))
-        oscilSpeed -= .1f;
+    if (IsKeyPressed(KEY_I))
+        oscilSpeed += .5f;
+    if (IsKeyPressed(KEY_K))
+        oscilSpeed -= .5f;
 
     // Grid Size
     if (IsKeyPressed(KEY_O))
@@ -113,6 +116,21 @@ void handleEvents()
     if (IsKeyPressed(KEY_L))
     {
         gridSize -= 1;
+        arrangeRandomTiles();
+    }
+
+    // Grid Size
+    if (IsKeyPressed(KEY_Y))
+    {
+        stddev += .4f;
+        stddev = Clamp(float(stddev), 0.0f, 3.0f);
+        arrangeRandomTiles();
+    }
+
+    if (IsKeyPressed(KEY_H))
+    {
+        stddev -= .4f;
+        stddev = Clamp(float(stddev), 0.0f, 3.0f);
         arrangeRandomTiles();
     }
 
@@ -129,6 +147,8 @@ void handleEvents()
         gridSize = GRID_SIZE;
         amplitude = AMPLITUDE;
         oscilSpeed = OSCIl_SPEED;
+        stddev = DIST_STDDEV;
+        arrangeRandomTiles();
     }
 
     amplitude = Clamp(amplitude, 0.f, MAX_AMPLITUDE);
@@ -153,7 +173,7 @@ void drawGame()
         for (int colIndex = 0; colIndex < gridSize; colIndex++)
         {
             int i = (rowIndex * gridSize) + colIndex;
-            tileTex = tileTexArray[tileMap[i]];
+            tileTex = tileTexArray[tileMap[static_cast<unsigned long int>(i)]];
 
             auto getAlt = [&](float speed, float maxAlt, unsigned short option)
             {
@@ -184,15 +204,7 @@ void drawGame()
             // cout << "Amplitude: " << amplitude << "\n";
         }
     }
-    DrawText(TextFormat("Grid: %dx%d", gridSize, gridSize), 5, 5, 20, fgColor);
-    DrawText(TextFormat("Oscillation Speed: %.1f", oscilSpeed), 5, 25, 20, fgColor);
-    DrawText(TextFormat("Amplitude: %.1f", amplitude), 5, 45, 20, fgColor);
-
-    DrawText("( I/K ) for Oscillation speed", 5, h - 25, 10, fgColor);
-    DrawText("( U/J ) for Amplitude", 5, h - 15, 10, fgColor);
-    DrawText("( O/L ) for Grid Size", 5, h - 35, 10, fgColor);
-    DrawText("( SPACE ) to Reset", 5, h - 45, 10, fgColor);
-    DrawText("( 1, 2, 3... ) for Options", 5, h - 55, 10, fgColor);
+    drawText(SHOW_TEXT);
 
     EndDrawing();
 };
@@ -211,10 +223,37 @@ void drawTile(Texture &tile, int x, int y, Vector2 startPos, int size, float alt
     DrawTexture(tile, (int)isoCoords.x, (int)isoCoords.y, fgColor);
 }
 
+void drawText(bool showText)
+{
+    if (showText)
+    {
+        // Top Right Text
+
+        int vertInterval = 20;
+        int startDistVert = 5;
+        DrawText(TextFormat("Grid: %dx%d", gridSize, gridSize), 5, startDistVert + (vertInterval * 0), 20, fgColor);
+        DrawText(TextFormat("Oscillation Speed: %.1f", oscilSpeed), 5, startDistVert + (vertInterval * 1), 20, fgColor);
+        DrawText(TextFormat("Amplitude: %.1f", amplitude), 5, startDistVert + (vertInterval * 2), 20, fgColor);
+        DrawText(TextFormat("Standard Deviation: %.1f", stddev), 5, startDistVert + (vertInterval * 3), 20, fgColor);
+
+        // Bottom Left Text
+        vertInterval = 15;
+        startDistVert = 15;
+
+        DrawText("( O/L ) for Grid Size", 5, h - (5 * vertInterval + startDistVert), 10, fgColor);
+        DrawText("( I/K ) for Oscillation speed", 5, h - (4 * vertInterval + startDistVert), 10, fgColor);
+        DrawText("( U/J ) for Amplitude", 5, h - (3 * vertInterval + startDistVert), 10, fgColor);
+        DrawText("( Y/H ) for Std Dev", 5, h - (2 * vertInterval + startDistVert), 10, fgColor);
+
+        DrawText("( 1, 2, 3... ) for Options", 5, h - (1 * vertInterval + startDistVert), 10, fgColor);
+        DrawText("( SPACE ) to Reset", 5, h - (0 * vertInterval + startDistVert), 10, fgColor);
+    }
+};
+
 unsigned int prepareAssets(string files[], size_t limit)
 {
 
-    for (int i = 0; i < limit; i++)
+    for (unsigned long int i = 0; i < limit; i++)
     {
         tileImg = LoadImage(files[i].c_str());                          // upload to RAM
         ImageResizeNN(&tileImg, tileImg.width * 2, tileImg.height * 2); // 32x32 -> 64x64 (w/ nearest neighbour)
@@ -250,9 +289,10 @@ void arrangeRandomTiles()
     random_device rd;
     mt19937 gen(rd());
 
-    double mean = floor(imgFilesSize / 2.f);
-    double stddev = 2;
+    float mean = floor((float)imgFilesSize / 2.f);
     normal_distribution<float> dist(mean, stddev);
+    tileMap.resize(static_cast<unsigned long int>(gridSize * gridSize), 3);
+
     for (int i = 0; i < gridSize * gridSize; i++)
     {
 
@@ -263,7 +303,10 @@ void arrangeRandomTiles()
         } while (x < 0.0f || x > (float)(imgFilesSize)-1);
 
         // cout << round(x) << "\n";
-        tileMap[i] = int(round(x));
+
+        // cout << tileMap.size() << "\t" << tileMap.capacity() << "\n";
+        tileMap.at(static_cast<unsigned long int>(i)) = int(round(x));
+        // tileMap[i] = int(round(x));
         // tileMap.push_back(GetRandomValue(0, imgFilesSize - 1));
         // tileMap.push_back(2);
     }
