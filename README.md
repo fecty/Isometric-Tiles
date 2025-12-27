@@ -1,5 +1,8 @@
 # Isometric Tiles
 ## Try the project for yourself [here](https://fecty.github.io/assets/isometric/isometric_tiles.html).
+
+
+
 ![Image showcasing the oscillating isometric tiles](media/showcase_0.png)
 
 Isometric Tiles is a project built using [raylib](raylib/README.md), a simple and easy-to-use library to enjoy videogames programming. This project demonstrates rendering and managing isometric tilemaps, which are commonly used in 2D games to create a pseudo-3D effect. Watch video demonstration [here](https://www.youtube.com/watch?v=dv4SaadRs4c).
@@ -10,6 +13,15 @@ Isometric Tiles is a project built using [raylib](raylib/README.md), a simple an
 - Example code for tile placement and manipulation
 - Uses raylib for graphics, input, and window management
 - Easily extensible for game prototypes or educational purposes
+### Controls
+```
+ ( O / L )          # to control grid size
+ ( I / K )          # to control oscillation speed
+ ( U / J )          # to control amplitude
+ ( Y / H )          # to control standard deviation
+ ( 1, 2, ..., 9 )   # to choose among different oscillation patterns
+ ( SPACE )          # to reset to default
+```
 
 ## Project Structure
 
