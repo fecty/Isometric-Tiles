@@ -7,6 +7,7 @@
 #define SCREEN_TITLE "Isometric Tiles Experiment"
 #define BG_COLOR BLACK
 
+#define IMG_ARRAY_SIZE 5
 #define AMPLITUDE 32                      // determins the height of each individual tile
 #define MAX_AMPLITUDE (AMPLITUDE * 5)     // max height of an individual tile allowed
 #define OSCIl_SPEED 2                     // oscillation speed

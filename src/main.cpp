@@ -3,7 +3,10 @@
 #include <raylib.h>
 #include <raymath.h>
 
+#include <string>
+
 #include "definitions.hpp" // Contains constants relevent to program
+using namespace std;
 
 // Globals
 int w = SCREEN_WIDTH;
@@ -18,20 +21,29 @@ int gridSize = GRID_SIZE; // square grid
 float amplitude = AMPLITUDE;
 float oscilSpeed = OSCIl_SPEED;
 unsigned short oscilOption = OSCIL_OPTION; // for different altitude functions
+size_t imgArraySize = IMG_ARRAY_SIZE;
 
-char imgLoc[] = "assets/grass_tile.png"; // Location of isometric tile
+string imgArray[IMG_ARRAY_SIZE] = {
+    "assets/tile_1.png",
+    "assets/tile_2.png",
+    "assets/tile_3.png",
+    "assets/tile_4.png",
+    "assets/tile_5.png",
+};
+
+char imgLoc[] = "assets/tile_022.png"; // Location of isometric tile
 Image tileImg;
+Texture tileTexArray[IMG_ARRAY_SIZE];
 Texture tileTex;
 
 // Function Declarations
 void handleEvents();
 void drawGame();
-void drawTile(int x, int y, Vector2 startPos, int size, float altitude, bool showOutline = false);
-unsigned int prepareAssets(char *fileLoc);
+void drawTile(Texture &tile, int x, int y, Vector2 startPos, int size, float altitude, bool showOutline = false);
+unsigned int prepareAssets(string files[], size_t limit);
 Vector2 transform(Vector2 v);
 
 // Entry Point
-using namespace std;
 int main()
 {
     SetTargetFPS(FPS);
@@ -51,7 +63,7 @@ int main()
         InitWindow(w, h, SCREEN_TITLE);
     }
 
-    if (prepareAssets(imgLoc)) // Load Image, perform relevent pre-operations and load it as a texture.
+    if (prepareAssets(imgArray, imgArraySize)) // Load Image, perform relevent pre-operations and load it as a texture.
         cout << "Loaded texture successfully" << "\n";
     else
     {
@@ -119,6 +131,7 @@ void drawGame()
 {
     BeginDrawing();
     ClearBackground(bgColor);
+    tileTex = tileTexArray[0];
 
     Vector2 startPos = {((float)w - (float)tileTex.width) / 2.f, // to center a unit tile to its center
                         (float)h / 2.f};
@@ -143,7 +156,8 @@ void drawGame()
                 }
             };
 
-            drawTile(colIndex,
+            drawTile(tileTex,
+                     colIndex,
                      rowIndex,
                      startPos,
                      gridSize,
@@ -168,28 +182,36 @@ void drawGame()
     EndDrawing();
 };
 
-void drawTile(int x, int y, Vector2 startPos, int size, float altitude, bool showOutline)
+void drawTile(Texture &tile, int x, int y, Vector2 startPos, int size, float altitude, bool showOutline)
 {
 
-    Vector2 isoCoords = transform({float(x * tileTex.width), float(y * tileTex.height)}); // isometric transformation
-    isoCoords.x = startPos.x + (isoCoords.x / 2.f) - (float)(tileTex.width / 2);
-    isoCoords.y = startPos.y + (isoCoords.y / 2.f) - (float)(tileTex.height * size / 4);
+    Vector2 isoCoords = transform({float(x * tile.width), float(y * tile.height)}); // isometric transformation
+    isoCoords.x = startPos.x + (isoCoords.x / 2.f) - (float)(tile.width / 2);
+    isoCoords.y = startPos.y + (isoCoords.y / 2.f) - (float)(tile.height * size / 4);
 
     isoCoords.y -= altitude; // Makes the tile appear elevated
     if (showOutline)
-        DrawRectangleLines((int)isoCoords.x, (int)isoCoords.y, tileTex.width, tileImg.height, RED); // Show outline of tiles
+        DrawRectangleLines((int)isoCoords.x, (int)isoCoords.y, tile.width, tile.height, RED); // Show outline of tiles
 
-    DrawTexture(tileTex, (int)isoCoords.x, (int)isoCoords.y, fgColor);
+    DrawTexture(tile, (int)isoCoords.x, (int)isoCoords.y, fgColor);
 }
 
-unsigned int prepareAssets(char *fileLoc)
+unsigned int prepareAssets(string files[], size_t limit)
 {
-    tileImg = LoadImage(fileLoc);                                   // upload to RAM
-    ImageResizeNN(&tileImg, tileImg.width * 2, tileImg.height * 2); // 32x32 -> 64x64 (w/ nearest neighbour)
-    tileTex = LoadTextureFromImage(tileImg);                        // upload to VRAM
-    UnloadImage(tileImg);                                           // unload from RAM
-    cout << "Loaded Texture with width: " << tileTex.width << " and height: " << tileTex.height << "\n";
-    return tileTex.id; // 0 if texture loading failed
+
+    for (int i = 0; i < limit; i++)
+    {
+        tileImg = LoadImage(files[i].c_str());                          // upload to RAM
+        ImageResizeNN(&tileImg, tileImg.width * 2, tileImg.height * 2); // 32x32 -> 64x64 (w/ nearest neighbour)
+        tileTexArray[i] = LoadTextureFromImage(tileImg);                // upload to VRAM
+        UnloadImage(tileImg);                                           // unload from RAM
+        cout << "Loaded Texture (" << files[i] << ") with width: " << tileTexArray[i].width << " and height: " << tileTexArray[i].height << "\n";
+        if (!tileTexArray[i].id)
+        {
+            return tileTexArray[i].id;
+        }
+    }
+    return 1;
 }
 
 Vector2 transform(Vector2 v)
