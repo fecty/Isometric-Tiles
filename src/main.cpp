@@ -4,6 +4,8 @@
 #include <raymath.h>
 
 #include <string>
+#include <vector>
+#include <random>
 
 #include "definitions.hpp" // Contains constants relevent to program
 using namespace std;
@@ -21,20 +23,20 @@ int gridSize = GRID_SIZE; // square grid
 float amplitude = AMPLITUDE;
 float oscilSpeed = OSCIl_SPEED;
 unsigned short oscilOption = OSCIL_OPTION; // for different altitude functions
-size_t imgArraySize = IMG_ARRAY_SIZE;
 
-string imgArray[IMG_ARRAY_SIZE] = {
+string imgFiles[IMG_ARRAY_SIZE] = {
     "assets/tile_1.png",
     "assets/tile_2.png",
     "assets/tile_3.png",
     "assets/tile_4.png",
     "assets/tile_5.png",
 };
-
-char imgLoc[] = "assets/tile_022.png"; // Location of isometric tile
+size_t imgFilesSize = IMG_ARRAY_SIZE;
 Image tileImg;
 Texture tileTexArray[IMG_ARRAY_SIZE];
 Texture tileTex;
+
+vector<int> tileMap;
 
 // Function Declarations
 void handleEvents();
@@ -42,10 +44,12 @@ void drawGame();
 void drawTile(Texture &tile, int x, int y, Vector2 startPos, int size, float altitude, bool showOutline = false);
 unsigned int prepareAssets(string files[], size_t limit);
 Vector2 transform(Vector2 v);
+void arrangeRandomTiles();
 
 // Entry Point
 int main()
 {
+
     SetTargetFPS(FPS);
     SetTraceLogLevel(LOG_ERROR);
 
@@ -63,7 +67,7 @@ int main()
         InitWindow(w, h, SCREEN_TITLE);
     }
 
-    if (prepareAssets(imgArray, imgArraySize)) // Load Image, perform relevent pre-operations and load it as a texture.
+    if (prepareAssets(imgFiles, imgFilesSize)) // Load Image, perform relevent pre-operations and load it as a texture.
         cout << "Loaded texture successfully" << "\n";
     else
     {
@@ -71,6 +75,8 @@ int main()
         return -1;
     }
 
+    tileMap.resize(gridSize * gridSize, 3); // initialize vector with a default value
+    arrangeRandomTiles();                   // allocate a normal distribution biased random index to each tile position
     while (!WindowShouldClose())
     {
         if (IsWindowFocused())
@@ -99,9 +105,16 @@ void handleEvents()
 
     // Grid Size
     if (IsKeyPressed(KEY_O))
+    {
         gridSize += 1;
+        arrangeRandomTiles();
+    }
+
     if (IsKeyPressed(KEY_L))
+    {
         gridSize -= 1;
+        arrangeRandomTiles();
+    }
 
     if (IsKeyPressed(KEY_ONE))
         oscilOption = 1;
@@ -131,7 +144,6 @@ void drawGame()
 {
     BeginDrawing();
     ClearBackground(bgColor);
-    tileTex = tileTexArray[0];
 
     Vector2 startPos = {((float)w - (float)tileTex.width) / 2.f, // to center a unit tile to its center
                         (float)h / 2.f};
@@ -140,6 +152,9 @@ void drawGame()
     {
         for (int colIndex = 0; colIndex < gridSize; colIndex++)
         {
+            int i = (rowIndex * gridSize) + colIndex;
+            tileTex = tileTexArray[tileMap[i]];
+
             auto getAlt = [&](float speed, float maxAlt, unsigned short option)
             {
                 switch (option)
@@ -228,4 +243,28 @@ Vector2 transform(Vector2 v)
 
     return {1.0f * v.x - 1.0f * v.y,
             0.5f * v.x + 0.5f * v.y};
+}
+
+void arrangeRandomTiles()
+{
+    random_device rd;
+    mt19937 gen(rd());
+
+    double mean = floor(imgFilesSize / 2.f);
+    double stddev = 2;
+    normal_distribution<float> dist(mean, stddev);
+    for (int i = 0; i < gridSize * gridSize; i++)
+    {
+
+        double x;
+        do
+        {
+            x = dist(gen);
+        } while (x < 0.0f || x > (float)(imgFilesSize)-1);
+
+        // cout << round(x) << "\n";
+        tileMap[i] = int(round(x));
+        // tileMap.push_back(GetRandomValue(0, imgFilesSize - 1));
+        // tileMap.push_back(2);
+    }
 }
